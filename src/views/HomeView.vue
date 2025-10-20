@@ -1,0 +1,7 @@
+<template>
+  <section class="p-8">
+    <h1 class="text-3xl font-bold">Home</h1>
+    <p class="mt-2 text-slate-600">Welcome to the home page.</p>
+    <RouterLink class="text-sky-600 underline" to="/about">Go to About →</RouterLink>
+  </section>
+</template>
