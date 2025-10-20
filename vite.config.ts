@@ -14,7 +14,7 @@ export default defineConfig({
       eslint: {
         // tell the plugin we’re on ESLint 9 flat config
         useFlatConfig: true,
-        lintCommand: 'eslint "./src/!**!/!*.{ts,tsx,vue}"', // optional but I like to be explicit
+        lintCommand: 'eslint --ext .ts,.tsx,.vue src'
       },
       stylelint: { lintCommand: 'stylelint "./**/*.{css,vue}"' },
     }),
