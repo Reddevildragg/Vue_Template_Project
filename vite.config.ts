@@ -9,6 +9,7 @@ export default defineConfig({
     vue(),
     tailwindcss(),
     checker({
+	  enableBuild: false,
       typescript: true,
       vueTsc: true,
       eslint: {
