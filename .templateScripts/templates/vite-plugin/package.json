@@ -16,7 +16,7 @@
     "vite": "^6.0.0"
   },
   "devDependencies": {
-    "vite": "^7.1.7",
+    "vite": "^6.0.0",
     "vite-plugin-dts": "^4.0.0"
   }
 }
