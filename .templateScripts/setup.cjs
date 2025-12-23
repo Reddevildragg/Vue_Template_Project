@@ -157,7 +157,7 @@ function updateTsConfig(pluginName) {
             if (!tsConfig.compilerOptions) tsConfig.compilerOptions = {};
             if (!tsConfig.compilerOptions.paths) tsConfig.compilerOptions.paths = {};
 
-            const alias = `@plugins/${pluginName}`;
+            const alias = `${pluginName}`;
             // Point to src/index.ts or src folder. Usually folder is fine if resolution set to Node, but here explicitly adding it.
             // Using `src` folder as per user request to point to source.
             tsConfig.compilerOptions.paths[alias] = [`./plugins/${pluginName}/src`];
@@ -183,11 +183,11 @@ function updateViteConfig(pluginName) {
             const aliasStart = content.indexOf('alias: {');
             if (aliasStart !== -1) {
                 const insertPos = aliasStart + 'alias: {'.length;
-                const newAlias = `\n      "@plugins/${pluginName}": path.resolve(__dirname, "./plugins/${pluginName}/src"),`;
+                const newAlias = `\n      "${pluginName}": path.resolve(__dirname, "./plugins/${pluginName}/src"),`;
 
                 content = content.slice(0, insertPos) + newAlias + content.slice(insertPos);
                 fs.writeFileSync(viteConfigPath, content);
-                console.log(`Updated vite.config.ts with alias: @plugins/${pluginName}`);
+                console.log(`Updated vite.config.ts with alias: ${pluginName}`);
             } else {
                 console.warn('Could not find "alias: {" in vite.config.ts to inject new alias.');
             }
@@ -204,7 +204,7 @@ function addPluginToMainTs(pluginName) {
     const pascalName = toPascalCase(pluginName) + 'Plugin';
 
     // Using the alias we just created!
-    const importStatement = `import ${pascalName} from '@plugins/${pluginName}'\n`;
+    const importStatement = `import ${pascalName} from '${pluginName}'\n`;
 
     // Add import after last import
     const lastImportIndex = content.lastIndexOf('import ');
