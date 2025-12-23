@@ -10,6 +10,7 @@ const rl = readline.createInterface({
 const pluginsDir = path.join(__dirname, '..', 'plugins');
 const templatesDir = path.join(__dirname, 'templates');
 const templateScriptsDir = __dirname;
+const projectRoot = path.join(__dirname, '..');
 
 function askQuestion(query) {
   return new Promise(resolve => rl.question(query, resolve));
@@ -50,7 +51,6 @@ async function main() {
 
 async function setupProject() {
   console.log('\nSetting up for Project Development...');
-  // Example plugin removal logic is no longer needed as we removed it from the repo.
   console.log('Project setup complete.');
 }
 
@@ -102,6 +102,10 @@ async function setupPlugin() {
 
   console.log(`Plugin "${pluginName}" created at plugins/${pluginName}`);
 
+  // Automatically update tsconfig.json and vite.config.ts
+  updateTsConfig(pluginName);
+  updateViteConfig(pluginName);
+
   if (pluginType === 'component-library') {
       const addToMain = await askQuestion('Do you want to automatically add this plugin to main.ts? (y/n): ');
       if (addToMain.toLowerCase() === 'y') {
@@ -145,14 +149,62 @@ function copyDirectoryRecursive(source, target, replacements) {
     }
 }
 
+function updateTsConfig(pluginName) {
+    const tsConfigPath = path.join(projectRoot, 'tsconfig.json');
+    if (fs.existsSync(tsConfigPath)) {
+        try {
+            const tsConfig = JSON.parse(fs.readFileSync(tsConfigPath, 'utf-8'));
+            if (!tsConfig.compilerOptions) tsConfig.compilerOptions = {};
+            if (!tsConfig.compilerOptions.paths) tsConfig.compilerOptions.paths = {};
+
+            const alias = `@plugins/${pluginName}`;
+            // Point to src/index.ts or src folder. Usually folder is fine if resolution set to Node, but here explicitly adding it.
+            // Using `src` folder as per user request to point to source.
+            tsConfig.compilerOptions.paths[alias] = [`./plugins/${pluginName}/src`];
+
+            fs.writeFileSync(tsConfigPath, JSON.stringify(tsConfig, null, 2));
+            console.log(`Updated tsconfig.json with alias: ${alias}`);
+        } catch (e) {
+            console.error('Failed to update tsconfig.json:', e.message);
+        }
+    }
+}
+
+function updateViteConfig(pluginName) {
+    const viteConfigPath = path.join(projectRoot, 'vite.config.ts');
+    if (fs.existsSync(viteConfigPath)) {
+        try {
+            let content = fs.readFileSync(viteConfigPath, 'utf-8');
+
+            // We want to insert the alias into `alias: { ... }`
+            // We'll search for `alias: {` and insert after it.
+            // This assumes standard formatting.
+
+            const aliasStart = content.indexOf('alias: {');
+            if (aliasStart !== -1) {
+                const insertPos = aliasStart + 'alias: {'.length;
+                const newAlias = `\n      "@plugins/${pluginName}": path.resolve(__dirname, "./plugins/${pluginName}/src"),`;
+
+                content = content.slice(0, insertPos) + newAlias + content.slice(insertPos);
+                fs.writeFileSync(viteConfigPath, content);
+                console.log(`Updated vite.config.ts with alias: @plugins/${pluginName}`);
+            } else {
+                console.warn('Could not find "alias: {" in vite.config.ts to inject new alias.');
+            }
+        } catch (e) {
+            console.error('Failed to update vite.config.ts:', e.message);
+        }
+    }
+}
+
 function addPluginToMainTs(pluginName) {
-    const mainTsPath = path.join(__dirname, '..', 'src', 'main.ts');
+    const mainTsPath = path.join(projectRoot, 'src', 'main.ts');
     let content = fs.readFileSync(mainTsPath, 'utf-8');
 
     const pascalName = toPascalCase(pluginName) + 'Plugin';
 
-    // Importing from src for local dev as discussed
-    const importStatement = `import ${pascalName} from '@plugins/${pluginName}/src'\n`;
+    // Using the alias we just created!
+    const importStatement = `import ${pascalName} from '@plugins/${pluginName}'\n`;
 
     // Add import after last import
     const lastImportIndex = content.lastIndexOf('import ');
