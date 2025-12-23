@@ -8,6 +8,7 @@ const rl = readline.createInterface({
 });
 
 const pluginsDir = path.join(__dirname, '..', 'plugins');
+const templatesDir = path.join(__dirname, 'templates');
 
 function askQuestion(query) {
   return new Promise(resolve => rl.question(query, resolve));
@@ -63,6 +64,22 @@ async function setupPlugin() {
     return;
   }
 
+  // Ask for plugin type
+  let pluginType = await askQuestion('Is this a Component Library or a Vite Plugin? (1: Component Library, 2: Vite Plugin): ');
+  let templateName = '';
+
+  if (pluginType.trim() === '1') {
+      pluginType = 'component-library';
+      templateName = 'component-library';
+  } else if (pluginType.trim() === '2') {
+      pluginType = 'vite-plugin';
+      templateName = 'vite-plugin';
+  } else {
+      console.log('Invalid option. Defaulting to Component Library.');
+      pluginType = 'component-library';
+      templateName = 'component-library';
+  }
+
   const newPluginDir = path.join(pluginsDir, pluginName);
 
   if (fs.existsSync(newPluginDir)) {
@@ -70,46 +87,62 @@ async function setupPlugin() {
     return;
   }
 
-  fs.mkdirSync(newPluginDir, { recursive: true });
+  console.log(`Creating plugin from template: ${templateName}`);
 
-  // Create index.ts
-  const indexContent = `import type { App } from 'vue';
-import ${toPascalCase(pluginName)}Component from './${toPascalCase(pluginName)}Component.vue';
+  const selectedTemplateDir = path.join(templatesDir, templateName);
 
-export default {
-  install(app: App) {
-    app.component('${toPascalCase(pluginName)}Component', ${toPascalCase(pluginName)}Component);
-    console.log('${pluginName} installed');
-  }
-};
-`;
-  fs.writeFileSync(path.join(newPluginDir, 'index.ts'), indexContent);
-
-  // Create Component
-  const componentContent = `<template>
-  <div class="p-4 border border-green-500 rounded bg-green-50">
-    <h2 class="text-xl font-bold text-green-700">${toPascalCase(pluginName)} Component</h2>
-    <p>This is a component for ${pluginName}.</p>
-  </div>
-</template>
-`;
-  fs.writeFileSync(path.join(newPluginDir, `${toPascalCase(pluginName)}Component.vue`), componentContent);
-
-  // Create package.json
-  const packageJson = {
-    name: pluginName,
-    version: '0.0.0',
-    description: `Plugin ${pluginName}`,
-    main: 'index.ts'
+  // Variables for replacement
+  const replacements = {
+      '{{PLUGIN_NAME}}': pluginName,
+      '{{PASCAL_PLUGIN_NAME}}': toPascalCase(pluginName),
+      '{{CAMEL_PLUGIN_NAME}}': toCamelCase(pluginName)
   };
-  fs.writeFileSync(path.join(newPluginDir, 'package.json'), JSON.stringify(packageJson, null, 2));
+
+  copyDirectoryRecursive(selectedTemplateDir, newPluginDir, replacements);
 
   console.log(`Plugin "${pluginName}" created at plugins/${pluginName}`);
 
-  const addToMain = await askQuestion('Do you want to automatically add this plugin to main.ts? (y/n): ');
-  if (addToMain.toLowerCase() === 'y') {
-      addPluginToMainTs(pluginName);
+  if (pluginType === 'component-library') {
+      const addToMain = await askQuestion('Do you want to automatically add this plugin to main.ts? (y/n): ');
+      if (addToMain.toLowerCase() === 'y') {
+          addPluginToMainTs(pluginName);
+      }
+  } else {
+      console.log(`To use this vite plugin, import it in your root vite.config.ts.`);
   }
+}
+
+function copyDirectoryRecursive(source, target, replacements) {
+    if (!fs.existsSync(target)) {
+        fs.mkdirSync(target, { recursive: true });
+    }
+
+    const entries = fs.readdirSync(source, { withFileTypes: true });
+
+    for (const entry of entries) {
+        const srcPath = path.join(source, entry.name);
+
+        // Handle file name replacements (e.g. Component.vue -> MyPluginComponent.vue)
+        let destName = entry.name;
+        if (destName === 'Component.vue' && replacements['{{PASCAL_PLUGIN_NAME}}']) {
+             destName = `${replacements['{{PASCAL_PLUGIN_NAME}}']}Component.vue`;
+        }
+
+        const destPath = path.join(target, destName);
+
+        if (entry.isDirectory()) {
+            copyDirectoryRecursive(srcPath, destPath, replacements);
+        } else {
+            let content = fs.readFileSync(srcPath, 'utf-8');
+
+            // Perform replacements
+            for (const [key, value] of Object.entries(replacements)) {
+                content = content.split(key).join(value);
+            }
+
+            fs.writeFileSync(destPath, content);
+        }
+    }
 }
 
 function updateMainTs(includeExample) {
@@ -134,7 +167,9 @@ function addPluginToMainTs(pluginName) {
     let content = fs.readFileSync(mainTsPath, 'utf-8');
 
     const pascalName = toPascalCase(pluginName) + 'Plugin';
-    const importStatement = `import ${pascalName} from '@plugins/${pluginName}'\n`;
+
+    // Importing from src for local dev as discussed
+    const importStatement = `import ${pascalName} from '@plugins/${pluginName}/src'\n`;
 
     // Add import after last import
     const lastImportIndex = content.lastIndexOf('import ');
@@ -152,6 +187,10 @@ function addPluginToMainTs(pluginName) {
 
 function toPascalCase(str) {
   return str.replace(/(^\w|-\w)/g, clearAndUpper);
+}
+
+function toCamelCase(str) {
+    return str.replace(/-./g, x => x[1].toUpperCase());
 }
 
 function clearAndUpper(text) {
