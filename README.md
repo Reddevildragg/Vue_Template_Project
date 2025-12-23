@@ -14,7 +14,7 @@ This project includes a setup script to help you configure the environment for e
 Run the setup script:
 
 ```sh
-node scripts/setup.cjs
+node .templateScripts/setup.cjs
 ```
 
 ### Options
