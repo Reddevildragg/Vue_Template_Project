@@ -1,19 +1,38 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import tailwindcss from '@tailwindcss/vite'; // v4 Vite plugin
+import tailwindcss from '@tailwindcss/vite';
 import checker from 'vite-plugin-checker';
 import path from 'path';
+import { cspString } from './csp.config';
+
+function cspPlugin(): Plugin {
+  return {
+    name: 'vite-plugin-csp',
+    transformIndexHtml() {
+      return [
+        {
+          tag: 'meta',
+          attrs: {
+            'http-equiv': 'Content-Security-Policy',
+            content: cspString,
+          },
+          injectTo: 'head-prepend',
+        },
+      ];
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
     vue(),
     tailwindcss(),
+    cspPlugin(),
     checker({
-	  enableBuild: false,
+      enableBuild: false,
       typescript: true,
       vueTsc: true,
       eslint: {
-        // tell the plugin we’re on ESLint 9 flat config
         useFlatConfig: true,
         lintCommand: 'eslint --ext .ts,.tsx,.vue src'
       },

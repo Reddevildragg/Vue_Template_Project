@@ -8,7 +8,7 @@ import prettier from 'eslint-config-prettier'
 
 export default [
   // Ignore build outputs and config file
-  { ignores: ['dist/**', 'node_modules/**', '.vite/**', 'coverage/**', 'eslint.config.js'] },
+  { ignores: ['dist/**', 'node_modules/**', '.vite/**', 'coverage/**', 'eslint.config.js', '.templateScripts/**'] },
 
   // Base JS rules
   js.configs.recommended,
@@ -56,7 +56,7 @@ export default [
   },
 
   // --- Plain JS files: disable type-checked rules ---
-  { files: ['**/*.js', '**/*.cjs', '**/*.mjs'], extends: [tseslint.configs.disableTypeChecked] },
+  { files: ['**/*.js', '**/*.cjs', '**/*.mjs'], ...tseslint.configs.disableTypeChecked },
 
   // Prettier last
   prettier,
