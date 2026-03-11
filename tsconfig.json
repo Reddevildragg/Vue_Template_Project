@@ -5,7 +5,9 @@
     "src/**/*",
     "src/**/*.vue",
     "plugins/**/*",
-    "plugins/**/*.vue"
+    "plugins/**/*.vue",
+    "vite.config.ts",
+    "csp.config.ts"
   ],
   "compilerOptions": {
     "baseUrl": ".",
