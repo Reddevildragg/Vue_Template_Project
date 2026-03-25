@@ -4,21 +4,16 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [
-      dts({ insertTypesEntry: true })
+    dts({ include: ['src'] })
   ],
   build: {
     lib: {
-      entry: 'src/index.ts',
+      entry: path.resolve(__dirname, 'src/index.ts'),
       name: '{{PASCAL_PLUGIN_NAME}}',
-      fileName: (format) => `index.${format}.js`
+      fileName: 'index'
     },
     rollupOptions: {
-      external: ['vite'],
-      output: {
-        globals: {
-          vite: 'Vite'
-        }
-      }
+      external: ['vite']
     }
   }
 });

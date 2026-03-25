@@ -1,4 +1,4 @@
-# Vue 3 + TypeScript + Vite + Plugins
+# React 19 + TypeScript + Vite + Plugins
 
 This template supports both standard application development and plugin development.
 

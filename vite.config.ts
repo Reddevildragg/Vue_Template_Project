@@ -1,5 +1,5 @@
 import { defineConfig, type Plugin } from 'vite';
-import vue from '@vitejs/plugin-vue';
+import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import checker from 'vite-plugin-checker';
 import path from 'path';
@@ -25,18 +25,17 @@ function cspPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [
-    vue(),
+    react(),
     tailwindcss(),
     cspPlugin(),
     checker({
       enableBuild: false,
       typescript: true,
-      vueTsc: true,
       eslint: {
         useFlatConfig: true,
-        lintCommand: 'eslint --ext .ts,.tsx,.vue src'
+        lintCommand: 'eslint --ext .ts,.tsx src'
       },
-      stylelint: { lintCommand: 'stylelint "./**/*.{css,vue}"' },
+      stylelint: { lintCommand: 'stylelint "./**/*.css"' },
     }),
   ],
   resolve: {

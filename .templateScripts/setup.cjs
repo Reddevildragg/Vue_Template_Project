@@ -107,9 +107,9 @@ async function setupPlugin() {
   updateViteConfig(pluginName);
 
   if (pluginType === 'component-library') {
-      const addToMain = await askQuestion('Do you want to automatically add this plugin to main.ts? (y/n): ');
+      const addToMain = await askQuestion('Do you want to automatically add this plugin to main.tsx? (y/n): ');
       if (addToMain.toLowerCase() === 'y') {
-          addPluginToMainTs(pluginName);
+          console.log("Not automatically adding component library to main.tsx (you must manually import components)");
       }
   } else {
       console.log(`To use this vite plugin, import it in your root vite.config.ts.`);
@@ -126,10 +126,10 @@ function copyDirectoryRecursive(source, target, replacements) {
     for (const entry of entries) {
         const srcPath = path.join(source, entry.name);
 
-        // Handle file name replacements (e.g. Component.vue -> MyPluginComponent.vue)
+        // Handle file name replacements (e.g. Component.tsx -> MyPluginComponent.tsx)
         let destName = entry.name;
-        if (destName === 'Component.vue' && replacements['{{PASCAL_PLUGIN_NAME}}']) {
-             destName = `${replacements['{{PASCAL_PLUGIN_NAME}}']}Component.vue`;
+        if (destName === 'Component.tsx' && replacements['{{PASCAL_PLUGIN_NAME}}']) {
+             destName = `${replacements['{{PASCAL_PLUGIN_NAME}}']}Component.tsx`;
         }
 
         const destPath = path.join(target, destName);
@@ -195,29 +195,6 @@ function updateViteConfig(pluginName) {
             console.error('Failed to update vite.config.ts:', e.message);
         }
     }
-}
-
-function addPluginToMainTs(pluginName) {
-    const mainTsPath = path.join(projectRoot, 'src', 'main.ts');
-    let content = fs.readFileSync(mainTsPath, 'utf-8');
-
-    const pascalName = toPascalCase(pluginName) + 'Plugin';
-
-    // Using the alias we just created!
-    const importStatement = `import ${pascalName} from '${pluginName}'\n`;
-
-    // Add import after last import
-    const lastImportIndex = content.lastIndexOf('import ');
-    const endOfLastImport = content.indexOf('\n', lastImportIndex);
-
-    content = content.slice(0, endOfLastImport + 1) + importStatement + content.slice(endOfLastImport + 1);
-
-    // Add use
-    const mountIndex = content.indexOf('app.mount');
-    content = content.slice(0, mountIndex) + `app.use(${pascalName})\n` + content.slice(mountIndex);
-
-    fs.writeFileSync(mainTsPath, content);
-    console.log(`Added ${pluginName} to src/main.ts`);
 }
 
 function toPascalCase(str) {

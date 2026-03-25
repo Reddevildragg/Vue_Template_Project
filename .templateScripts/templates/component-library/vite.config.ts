@@ -1,24 +1,25 @@
 import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
+import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import path from 'path';
 
 export default defineConfig({
   plugins: [
-      vue(),
-      dts({ insertTypesEntry: true })
+    react(),
+    dts({ include: ['src'] })
   ],
   build: {
     lib: {
-      entry: 'src/index.ts',
+      entry: path.resolve(__dirname, 'src/index.ts'),
       name: '{{PASCAL_PLUGIN_NAME}}',
       fileName: (format) => `index.${format}.js`
     },
     rollupOptions: {
-      external: ['vue'],
+      external: ['react', 'react-dom'],
       output: {
         globals: {
-          vue: 'Vue'
+          react: 'React',
+          'react-dom': 'ReactDOM'
         }
       }
     }
