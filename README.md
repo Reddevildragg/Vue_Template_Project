@@ -1,67 +1,63 @@
-# Vue 3 + TypeScript + Vite + Plugins
+# Python Boilerplate
 
-This template supports both standard application development and plugin development.
+A modern Python project boilerplate featuring strict static typing, fast linting and formatting, and unit testing.
+
+## Tech Stack
+
+- **Python Version**: >= 3.9
+- **Type Checking**: `mypy` for strict static type checking (similar to TypeScript).
+- **Linting & Formatting**: `ruff` for extremely fast linting and auto-formatting (replaces Flake8/Black/isort/etc.).
+- **Testing**: `pytest` for unit testing.
 
 ## Project Structure
 
 - `src/`: Main application source code.
-- `plugins/`: Directory for developing plugins.
+- `tests/`: Unit tests.
 
-## Setup Script
+## Setup
 
-This project includes a setup script to help you configure the environment for either Project Development or Plugin Development.
-
-Run the setup script:
+First, it is recommended to create a virtual environment:
 
 ```sh
-node .templateScripts/setup.cjs
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-### Options
-
-1. **Project Development**: Can remove example plugins and cleanup `main.ts`.
-2. **Plugin Development**: Scaffolds a new plugin in the `plugins/` directory and optionally adds it to `src/main.ts`.
-
-## Plugin Development
-
-Plugins reside in the `plugins/` directory. Each plugin should be a folder containing at least:
-- `index.ts`: The entry point exporting a Vue `install` function.
-- `package.json`: Plugin metadata.
-
-The template is configured to alias `@plugins` to the `plugins/` directory.
-
-### Example Plugin
-
-See `plugins/example-plugin` for a reference implementation.
-
-## Recommended IDE Setup
-
-[VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
-## Project Setup
+Then, install the development dependencies:
 
 ```sh
-npm install
+pip install -r requirements-dev.txt
 ```
 
-### Compile and Hot-Reload for Development
+## Running Tools
+
+### Static Type Checking (Mypy)
+
+Run Mypy to check for type errors:
 
 ```sh
-npm run dev
+mypy src tests
 ```
 
-### Type-Check, Compile and Minify for Production
+### Linting and Formatting (Ruff)
+
+Check for linting errors and formatting issues:
 
 ```sh
-npm run build
+ruff check src tests
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+To automatically fix linting errors and format code:
 
 ```sh
-npm run lint
+ruff check --fix src tests
+ruff format src tests
+```
+
+### Testing (Pytest)
+
+Run all unit tests:
+
+```sh
+pytest
 ```
