@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import checker from 'vite-plugin-checker';
 import path from 'path';
 import { cspString } from './csp.config';
+import vueDevTools from 'vite-plugin-vue-devtools'
 
 function cspPlugin(): Plugin {
   return {
@@ -38,6 +39,7 @@ export default defineConfig({
       },
       stylelint: { lintCommand: 'stylelint "./**/*.{css,vue}"' },
     }),
+    vueDevTools(),
   ],
   resolve: {
     alias: {
