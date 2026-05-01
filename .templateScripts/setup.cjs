@@ -20,13 +20,19 @@ async function main() {
   console.log('Welcome to the Template Setup Script!');
   console.log('1. Setup for Project Development (Main App)');
   console.log('2. Setup for Plugin Development');
+  console.log('3. Setup for Electron App');
+  console.log('4. Setup for Browser Extension');
 
-  const answer = await askQuestion('Select an option (1 or 2): ');
+  const answer = await askQuestion('Select an option (1, 2, 3, or 4): ');
 
   if (answer.trim() === '1') {
     await setupProject();
   } else if (answer.trim() === '2') {
     await setupPlugin();
+  } else if (answer.trim() === '3') {
+    await setupElectron();
+  } else if (answer.trim() === '4') {
+    await setupBrowserExtension();
   } else {
     console.log('Invalid option.');
   }
@@ -218,6 +224,79 @@ function addPluginToMainTs(pluginName) {
 
     fs.writeFileSync(mainTsPath, content);
     console.log(`Added ${pluginName} to src/main.ts`);
+}
+
+async function setupElectron() {
+  console.log('\nSetting up for Electron App...');
+
+  const electronTemplateDir = path.join(templatesDir, 'electron-app');
+
+  // Copy electron folder and forge.config.cjs
+  copyDirectoryRecursive(path.join(electronTemplateDir, 'electron'), path.join(projectRoot, 'electron'), {});
+
+  const forgeConfigSrc = path.join(electronTemplateDir, 'forge.config.cjs');
+  const forgeConfigDest = path.join(projectRoot, 'forge.config.cjs');
+  fs.copyFileSync(forgeConfigSrc, forgeConfigDest);
+
+  // Update package.json
+  const packageJsonPath = path.join(projectRoot, 'package.json');
+  if (fs.existsSync(packageJsonPath)) {
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+      packageJson.main = "electron/main.js";
+
+      // Add scripts
+      packageJson.scripts = packageJson.scripts || {};
+      packageJson.scripts["electron:start"] = "electron-forge start";
+      packageJson.scripts["electron:package"] = "electron-forge package";
+      packageJson.scripts["electron:make"] = "electron-forge make";
+
+      // Add devDependencies
+      packageJson.devDependencies = packageJson.devDependencies || {};
+      packageJson.devDependencies["electron"] = "^34.0.0";
+      packageJson.devDependencies["@electron-forge/cli"] = "^7.4.0";
+      packageJson.devDependencies["@electron-forge/maker-deb"] = "^7.4.0";
+      packageJson.devDependencies["@electron-forge/maker-rpm"] = "^7.4.0";
+      packageJson.devDependencies["@electron-forge/maker-squirrel"] = "^7.4.0";
+      packageJson.devDependencies["@electron-forge/maker-zip"] = "^7.4.0";
+      packageJson.devDependencies["electron-squirrel-startup"] = "^1.0.0";
+
+      fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+      console.log('Updated package.json for Electron. Run `npm install` to install dependencies.');
+    } catch (e) {
+      console.error('Failed to update package.json:', e.message);
+    }
+  }
+
+  console.log('Electron App setup complete. Run `npm run dev` in one terminal and `npm run electron:start` in another.');
+}
+
+async function setupBrowserExtension() {
+  console.log('\nSetting up for Browser Extension...');
+
+  const extensionTemplateDir = path.join(templatesDir, 'browser-extension');
+
+  // Copy public and src/extension
+  copyDirectoryRecursive(path.join(extensionTemplateDir, 'public'), path.join(projectRoot, 'public'), {});
+  copyDirectoryRecursive(path.join(extensionTemplateDir, 'src'), path.join(projectRoot, 'src'), {});
+
+  console.log('Browser Extension files copied.');
+  console.log('\nIMPORTANT: To build the extension correctly, you need to update your vite.config.ts.');
+  console.log('Add the following to the `build.rollupOptions.input` section in vite.config.ts:');
+  console.log(`
+    build: {
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'index.html'),
+          background: resolve(__dirname, 'src/extension/background.js'),
+          content: resolve(__dirname, 'src/extension/content-script.js')
+        },
+        output: {
+          entryFileNames: 'assets/[name].js'
+        }
+      }
+    }
+  `);
 }
 
 function toPascalCase(str) {
