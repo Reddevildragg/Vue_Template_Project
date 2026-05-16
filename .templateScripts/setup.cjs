@@ -16,30 +16,92 @@ function askQuestion(query) {
   return new Promise(resolve => rl.question(query, resolve));
 }
 
+async function selectOption(message, options) {
+  return new Promise((resolve) => {
+    let selectedIndex = 0;
+
+    // Use bold for the prompt message
+    console.log(`\x1b[1m? ${message}\x1b[0m`);
+    options.forEach(() => console.log());
+
+    const render = () => {
+      process.stdout.write(`\x1B[${options.length}A`);
+
+      options.forEach((opt, idx) => {
+        process.stdout.write('\x1B[2K\x1B[G');
+        if (idx === selectedIndex) {
+          // Cyan pointer and bold text for selected option
+          console.log(`  \x1b[36m❯ ${opt.label}\x1b[0m`);
+        } else {
+          // Dim text for unselected option
+          console.log(`    \x1b[2m${opt.label}\x1b[0m`);
+        }
+      });
+    };
+
+    render();
+
+    const onKeypress = (str, key) => {
+      if (key.name === 'up') {
+        selectedIndex = (selectedIndex > 0) ? selectedIndex - 1 : options.length - 1;
+        render();
+      } else if (key.name === 'down') {
+        selectedIndex = (selectedIndex < options.length - 1) ? selectedIndex + 1 : 0;
+        render();
+      } else if (key.name === 'return' || key.name === 'enter') {
+        cleanup();
+        resolve(options[selectedIndex].value);
+      } else if (key.name === 'c' && key.ctrl) {
+        cleanup();
+        process.exit(1);
+      }
+    };
+
+    const cleanup = () => {
+      process.stdin.removeListener('keypress', onKeypress);
+      if (process.stdin.isTTY) {
+        process.stdin.setRawMode(false);
+      }
+      process.stdin.pause();
+    };
+
+    readline.emitKeypressEvents(process.stdin);
+    if (process.stdin.isTTY) {
+      process.stdin.setRawMode(true);
+    }
+    process.stdin.resume();
+    process.stdin.on('keypress', onKeypress);
+  });
+}
+
 async function main() {
-  console.log('Welcome to the Template Setup Script!');
-  console.log('1. Setup for Project Development (Main App)');
-  console.log('2. Setup for Plugin Development');
-  console.log('3. Setup for Electron App');
-  console.log('4. Setup for Browser Extension');
+  console.log('Welcome to the Template Setup Script!\n');
 
-  const answer = await askQuestion('Select an option (1, 2, 3, or 4): ');
+  const answer = await selectOption('Select an option:', [
+    { label: 'Setup for Project Development (Main App)', value: '1' },
+    { label: 'Setup for Plugin Development', value: '2' },
+    { label: 'Setup for Electron App', value: '3' },
+    { label: 'Setup for Browser Extension', value: '4' }
+  ]);
 
-  if (answer.trim() === '1') {
+  if (answer === '1') {
     await setupProject();
-  } else if (answer.trim() === '2') {
+  } else if (answer === '2') {
     await setupPlugin();
-  } else if (answer.trim() === '3') {
+  } else if (answer === '3') {
     await setupElectron();
-  } else if (answer.trim() === '4') {
+  } else if (answer === '4') {
     await setupBrowserExtension();
-  } else {
-    console.log('Invalid option.');
   }
 
   // Ask to remove the template scripts directory
-  const removeScripts = await askQuestion('\nDo you want to remove the .templateScripts directory to clean up the project? (y/n): ');
-  if (removeScripts.toLowerCase() === 'y') {
+  console.log('');
+  const removeScripts = await selectOption('Do you want to remove the .templateScripts directory to clean up the project?', [
+    { label: 'Yes', value: 'y' },
+    { label: 'No', value: 'n' }
+  ]);
+
+  if (removeScripts === 'y') {
       console.log('Removing .templateScripts directory...');
       rl.close();
 
@@ -71,20 +133,12 @@ async function setupPlugin() {
   }
 
   // Ask for plugin type
-  let pluginType = await askQuestion('Is this a Component Library or a Vite Plugin? (1: Component Library, 2: Vite Plugin): ');
-  let templateName = '';
-
-  if (pluginType.trim() === '1') {
-      pluginType = 'component-library';
-      templateName = 'component-library';
-  } else if (pluginType.trim() === '2') {
-      pluginType = 'vite-plugin';
-      templateName = 'vite-plugin';
-  } else {
-      console.log('Invalid option. Defaulting to Component Library.');
-      pluginType = 'component-library';
-      templateName = 'component-library';
-  }
+  console.log('');
+  let pluginType = await selectOption('Is this a Component Library or a Vite Plugin?', [
+    { label: 'Component Library', value: 'component-library' },
+    { label: 'Vite Plugin', value: 'vite-plugin' }
+  ]);
+  let templateName = pluginType;
 
   const newPluginDir = path.join(pluginsDir, pluginName);
 
@@ -113,8 +167,12 @@ async function setupPlugin() {
   updateViteConfig(pluginName);
 
   if (pluginType === 'component-library') {
-      const addToMain = await askQuestion('Do you want to automatically add this plugin to main.ts? (y/n): ');
-      if (addToMain.toLowerCase() === 'y') {
+      console.log('');
+      const addToMain = await selectOption('Do you want to automatically add this plugin to main.ts?', [
+        { label: 'Yes', value: 'y' },
+        { label: 'No', value: 'n' }
+      ]);
+      if (addToMain === 'y') {
           addPluginToMainTs(pluginName);
       }
   } else {
