@@ -10,7 +10,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "vite build"
+    "build": "vite build",
+    "publish:test": "npm publish --dry-run"
   },
   "devDependencies": {
     "vite": "^6.0.0",

@@ -26,6 +26,9 @@ jobs:
     - name: Install Dependencies
       run: npm ci
 
+    - name: Build Packages (Workspaces)
+      run: npm run build --workspaces --if-present
+
     - name: Lint Code
       run: npm run lint
       
@@ -37,6 +40,3 @@ jobs:
 
     - name: Build Root App
       run: npm run build
-
-    - name: Build Packages (Workspaces)
-      run: npm run build --workspaces --if-present

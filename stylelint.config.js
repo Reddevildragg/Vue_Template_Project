@@ -19,5 +19,5 @@ export default {
       "block-no-empty": false,
       "no-empty-source": false
     },
-    ignoreFiles: ['dist/**/*', 'node_modules/**/*'],
+    ignoreFiles: ['**/dist/**/*', 'node_modules/**/*'],
 }

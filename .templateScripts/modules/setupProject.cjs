@@ -43,9 +43,7 @@ async function setupProject() {
 
   // Ensure root build script can handle workspaces, building workspaces FIRST
   updateRootPackageScripts({
-    "build:app": "vue-tsc --noEmit && vite build",
-    "build:workspaces": "npm run build --workspaces --if-present",
-    "build": "npm run build:workspaces && npm run build:app"
+    "build": "vue-tsc --noEmit && vite build"
   });
 
   console.log('Project setup complete.');

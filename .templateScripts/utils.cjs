@@ -76,16 +76,26 @@ async function selectOption(message, options) {
   });
 }
 
-function clearAndUpper(text) {
-  return text.replace(/-/, '').toUpperCase();
+function getBaseName(str) {
+  // If scoped package (e.g. @scope/name), take only the 'name' part
+  const parts = str.split('/');
+  const name = parts[parts.length - 1];
+  // Remove @ if it's there (should be handled by split, but just in case)
+  return name.replace(/^@/, '');
 }
 
 function toPascalCase(str) {
-  return str.replace(/(^\w|-\w)/g, clearAndUpper);
+  const base = getBaseName(str);
+  return base
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join('');
 }
 
 function toCamelCase(str) {
-  return str.replace(/-./g, (x) => x[1].toUpperCase());
+  const pascal = toPascalCase(str);
+  return pascal.charAt(0).toLowerCase() + pascal.slice(1);
 }
 
 function copyDirectoryRecursive(source, target, replacements) {

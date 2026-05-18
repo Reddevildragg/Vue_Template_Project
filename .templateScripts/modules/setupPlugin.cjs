@@ -173,7 +173,8 @@ async function setupPlugin() {
   updateRootPackageScripts({
     "build:app": "vue-tsc --noEmit && vite build",
     "build:workspaces": "npm run build --workspaces --if-present",
-    "build": "npm run build:workspaces && npm run build:app"
+    "build": "npm run build:workspaces && npm run build:app",
+    "publish:test": "npm run publish:test --workspaces --if-present"
   });
 
   if (pluginType === 'component-library' || pluginType === 'vue-plugin') {
