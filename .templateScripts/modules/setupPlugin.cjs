@@ -9,7 +9,8 @@ const {
   selectOption,
   toPascalCase,
   toCamelCase,
-  copyDirectoryRecursive
+  copyDirectoryRecursive,
+  updateRootPackageScripts
 } = require('../utils.cjs');
 
 function updateWorkspaces() {
@@ -113,11 +114,67 @@ async function setupPlugin() {
   };
 
   copyDirectoryRecursive(selectedTemplateDir, newPluginDir, replacements);
+  
+  // Handle workflow copying
+  const workflowSrcDir = path.join(newPluginDir, '.github', 'workflows');
+  const rootWorkflowDestDir = path.join(projectRoot, '.github', 'workflows');
+
+  if (fs.existsSync(workflowSrcDir)) {
+      if (!fs.existsSync(rootWorkflowDestDir)) {
+         if (!IS_DEBUG) fs.mkdirSync(rootWorkflowDestDir, { recursive: true });
+      }
+
+      const files = fs.readdirSync(workflowSrcDir);
+      for (const file of files) {
+          const srcFile = path.join(workflowSrcDir, file);
+          const destFile = path.join(rootWorkflowDestDir, file);
+          
+          if (!fs.existsSync(destFile)) {
+              if (IS_DEBUG) {
+                  console.log(`[DEBUG] Would copy ${file} to ${destFile}`);
+              } else {
+                  fs.copyFileSync(srcFile, destFile);
+                  console.log(`Copied ${file} GitHub Actions workflow.`);
+              }
+          } else {
+              console.log(`Workflow ${file} already exists at root, skipping copy.`);
+          }
+      }
+      
+      // Remove the .github directory from the plugin folder since it doesn't belong there
+      if (!IS_DEBUG) {
+          fs.rmSync(path.join(newPluginDir, '.github'), { recursive: true, force: true });
+      } else {
+           console.log(`[DEBUG] Would remove .github from plugin directory ${newPluginDir}`);
+      }
+  }
+
+  // Ensure standard CI workflow is copied if setting up the first plugin
+  const ciWorkflowSrc = path.join(__dirname, '..', 'workflows', 'ci.yml');
+  const ciWorkflowDest = path.join(rootWorkflowDestDir, 'ci.yml');
+
+  if (fs.existsSync(ciWorkflowSrc) && !fs.existsSync(ciWorkflowDest)) {
+    if (IS_DEBUG) {
+      console.log(`[DEBUG] Would copy ci.yml to ${ciWorkflowDest}`);
+    } else {
+      // Ensure root workflow dir exists in case the template didn't have one
+      if (!fs.existsSync(rootWorkflowDestDir)) fs.mkdirSync(rootWorkflowDestDir, { recursive: true });
+      fs.copyFileSync(ciWorkflowSrc, ciWorkflowDest);
+      console.log('Copied standard CI GitHub Actions workflow.');
+    }
+  }
 
   console.log(`Plugin "${pluginName}" created at plugins/${pluginName}`);
 
   // Automatically update workspaces in package.json
   updateWorkspaces();
+
+  // Ensure root build script can handle workspaces, building workspaces FIRST
+  updateRootPackageScripts({
+    "build:app": "vue-tsc --noEmit && vite build",
+    "build:workspaces": "npm run build --workspaces --if-present",
+    "build": "npm run build:workspaces && npm run build:app"
+  });
 
   if (pluginType === 'component-library' || pluginType === 'vue-plugin') {
     console.log('');

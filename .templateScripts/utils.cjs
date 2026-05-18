@@ -131,6 +131,35 @@ function closeReadline() {
   rl.close();
 }
 
+function updateRootPackageScripts(newScripts) {
+  const packageJsonPath = path.join(projectRoot, 'package.json');
+  if (fs.existsSync(packageJsonPath)) {
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+      packageJson.scripts = packageJson.scripts || {};
+      
+      let changed = false;
+      for (const [key, value] of Object.entries(newScripts)) {
+        if (packageJson.scripts[key] !== value) {
+          packageJson.scripts[key] = value;
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        if (IS_DEBUG) {
+          console.log(`[DEBUG] Would update root package.json scripts with:`, newScripts);
+        } else {
+          fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+          console.log('Updated root package.json scripts.');
+        }
+      }
+    } catch (e) {
+      console.error('Failed to update root package.json scripts:', e.message);
+    }
+  }
+}
+
 module.exports = {
   pluginsDir,
   templatesDir,
@@ -142,5 +171,6 @@ module.exports = {
   closeReadline,
   toPascalCase,
   toCamelCase,
-  copyDirectoryRecursive
+  copyDirectoryRecursive,
+  updateRootPackageScripts
 };
