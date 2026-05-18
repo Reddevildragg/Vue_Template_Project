@@ -40,14 +40,16 @@ function updateWorkspaces() {
   }
 }
 
-function addPluginToMainTs(pluginName) {
+function addPluginToMainTs(pluginName, importName, defaultExport = true) {
   const mainTsPath = path.join(projectRoot, 'src', 'main.ts');
   if (!fs.existsSync(mainTsPath)) return;
 
   let content = fs.readFileSync(mainTsPath, 'utf-8');
 
-  const pascalName = toPascalCase(pluginName) + 'Plugin';
-  const importStatement = `import ${pascalName} from '${pluginName}'\n`;
+  // If standard plugin or component library, we might use default import
+  const importStatement = defaultExport 
+    ? `import ${importName} from '${pluginName}'\n`
+    : `import { ${importName} } from '${pluginName}'\n`;
 
   const lastImportIndex = content.lastIndexOf('import ');
   const endOfLastImport = content.indexOf('\n', lastImportIndex);
@@ -56,7 +58,7 @@ function addPluginToMainTs(pluginName) {
     content.slice(0, endOfLastImport + 1) + importStatement + content.slice(endOfLastImport + 1);
 
   const mountIndex = content.indexOf('app.mount');
-  content = content.slice(0, mountIndex) + `app.use(${pascalName})\n` + content.slice(mountIndex);
+  content = content.slice(0, mountIndex) + `app.use(${importName})\n` + content.slice(mountIndex);
 
   if (IS_DEBUG) {
     console.log(`[DEBUG] Would update src/main.ts to include plugin: ${pluginName}`);
@@ -78,10 +80,13 @@ async function setupPlugin() {
 
   // Ask for plugin type
   console.log('');
-  let pluginType = await selectOption('Is this a Component Library or a Vite Plugin?', [
-    { label: 'Component Library', value: 'component-library' },
-    { label: 'Vite Plugin', value: 'vite-plugin' },
+  let pluginType = await selectOption('What type of package are you creating?', [
+    { label: 'Vue Component Library (UI Components)', value: 'component-library' },
+    { label: 'Vue App Plugin (Provides app.use() install hook)', value: 'vue-plugin' },
+    { label: 'Standard Code/Utils Library (No Vue dependency)', value: 'utils-library' },
+    { label: 'Vite Plugin (Build tool extension)', value: 'vite-plugin' },
   ]);
+
   let templateName = pluginType;
 
   const newPluginDir = path.join(pluginsDir, pluginName);
@@ -94,6 +99,11 @@ async function setupPlugin() {
   console.log(`Creating plugin from template: ${templateName}`);
 
   const selectedTemplateDir = path.join(templatesDir, templateName);
+
+  if (!fs.existsSync(selectedTemplateDir)) {
+    console.error(`Error: Template "${templateName}" not found at ${selectedTemplateDir}`);
+    return;
+  }
 
   // Variables for replacement
   const replacements = {
@@ -109,23 +119,29 @@ async function setupPlugin() {
   // Automatically update workspaces in package.json
   updateWorkspaces();
 
-  if (pluginType === 'component-library') {
+  if (pluginType === 'component-library' || pluginType === 'vue-plugin') {
     console.log('');
     const addToMain = await selectOption(
-      'Do you want to automatically add this plugin to main.ts?',
+      'Do you want to automatically add this plugin to main.ts using app.use()?',
       [
         { label: 'Yes', value: 'y' },
         { label: 'No', value: 'n' },
       ],
     );
     if (addToMain === 'y') {
-      addPluginToMainTs(pluginName);
+      const pascalName = toPascalCase(pluginName);
+      if (pluginType === 'vue-plugin') {
+        // Vue plugins might export a specific named object or default
+        addPluginToMainTs(pluginName, `${pascalName}Plugin`, true);
+      } else {
+        addPluginToMainTs(pluginName, `${pascalName}Plugin`, true);
+      }
     }
   }
 
   console.log(
     '\n\x1b[32m%s\x1b[0m',
-    'Setup complete! Please run `npm install` to link the new plugin workspace.',
+    'Setup complete! Please run `npm install` to link the new workspace.',
   );
 }
 
