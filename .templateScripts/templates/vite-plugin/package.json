@@ -14,10 +14,10 @@
     "publish:test": "npm publish --dry-run"
   },
   "peerDependencies": {
-    "vite": "^6.0.0"
+    "vite": "^8.0.0"
   },
   "devDependencies": {
-    "vite": "^6.0.0",
+    "vite": "^8.0.0",
     "vite-plugin-dts": "^4.0.0"
   }
 }
