@@ -1,18 +1,27 @@
-import { defineConfig } from 'vite';
-import dts from 'vite-plugin-dts';
-import { resolve } from 'path';
+import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { defineConfig } from 'vite'
+import dts from 'vite-plugin-dts'
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 export default defineConfig({
   plugins: [
     dts({
-      insertTypesEntry: true,
+      rollupTypes: true,
     }),
   ],
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
       name: '{{PASCAL_PLUGIN_NAME}}',
-      fileName: (format) => `index.${format}.js`,
+      fileName: (format) => `index.${format === 'es' ? 'mjs' : 'cjs'}`,
+      formats: ['es', 'cjs'],
     },
   },
-});
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
+  },
+})

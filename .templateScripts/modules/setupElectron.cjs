@@ -68,7 +68,7 @@ async function setupElectron() {
   if (fs.existsSync(packageJsonPath)) {
     try {
       const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-      packageJson.main = 'electron/main.js';
+      packageJson.main = 'electron/main.cjs';
       
       packageJson.devDependencies = packageJson.devDependencies || {};
       packageJson.devDependencies['electron'] = '^34.0.0';
