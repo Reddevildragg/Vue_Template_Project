@@ -170,6 +170,36 @@ function updateRootPackageScripts(newScripts) {
   }
 }
 
+async function setupReleaseWorkflow() {
+  const workflowDestDir = path.join(projectRoot, '.github', 'workflows');
+  if (!fs.existsSync(workflowDestDir)) {
+    if (!IS_DEBUG) fs.mkdirSync(workflowDestDir, { recursive: true });
+  }
+
+  const releaseWorkflowSrc = path.join(templateScriptsDir, 'workflows', 'release.yml');
+  const releaseWorkflowDest = path.join(workflowDestDir, 'release.yml');
+
+  if (fs.existsSync(releaseWorkflowSrc)) {
+    console.log('');
+    const githubRepo = await askQuestion('Enter your GitHub Repository path (owner/repo) for release protection [optional]: ');
+    
+    let content = fs.readFileSync(releaseWorkflowSrc, 'utf-8');
+    if (githubRepo && githubRepo.trim()) {
+      content = content.replace('your-repo-owner/your-repo-name', githubRepo.trim());
+      console.log(`Configuring release.yml to run on ${githubRepo.trim()}`);
+    } else {
+      console.log('Skipping custom GitHub Repository configuration (leaving TODO).');
+    }
+
+    if (IS_DEBUG) {
+      console.log(`[DEBUG] Would write release.yml to ${releaseWorkflowDest}`);
+    } else {
+      fs.writeFileSync(releaseWorkflowDest, content);
+      console.log('Copied release.yml GitHub Actions workflow.');
+    }
+  }
+}
+
 module.exports = {
   pluginsDir,
   templatesDir,
@@ -182,5 +212,6 @@ module.exports = {
   toPascalCase,
   toCamelCase,
   copyDirectoryRecursive,
-  updateRootPackageScripts
+  updateRootPackageScripts,
+  setupReleaseWorkflow
 };

@@ -5,7 +5,8 @@ const {
   projectRoot,
   IS_DEBUG,
   copyDirectoryRecursive,
-  updateRootPackageScripts
+  updateRootPackageScripts,
+  setupReleaseWorkflow
 } = require('../utils.cjs');
 
 async function setupElectron() {
@@ -56,6 +57,9 @@ async function setupElectron() {
       console.log('Copied standard CI GitHub Actions workflow.');
     }
   }
+
+  // Copy standard release workflow
+  await setupReleaseWorkflow();
 
   // Update package.json scripts
   updateRootPackageScripts({

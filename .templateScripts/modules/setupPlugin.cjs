@@ -10,7 +10,8 @@ const {
   toPascalCase,
   toCamelCase,
   copyDirectoryRecursive,
-  updateRootPackageScripts
+  updateRootPackageScripts,
+  setupReleaseWorkflow
 } = require('../utils.cjs');
 
 function updateWorkspaces() {
@@ -163,6 +164,9 @@ async function setupPlugin() {
       console.log('Copied standard CI GitHub Actions workflow.');
     }
   }
+
+  // Copy standard release workflow
+  await setupReleaseWorkflow();
 
   console.log(`Plugin "${pluginName}" created at plugins/${pluginName}`);
 

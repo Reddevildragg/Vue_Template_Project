@@ -5,7 +5,8 @@ const {
   projectRoot,
   IS_DEBUG,
   copyDirectoryRecursive,
-  updateRootPackageScripts
+  updateRootPackageScripts,
+  setupReleaseWorkflow
 } = require('../utils.cjs');
 
 async function setupBrowserExtension() {
@@ -48,6 +49,9 @@ async function setupBrowserExtension() {
       console.log('Copied standard CI GitHub Actions workflow.');
     }
   }
+
+  // Copy standard release workflow
+  await setupReleaseWorkflow();
 
   // Ensure root build script can handle workspaces and standard builds
   updateRootPackageScripts({

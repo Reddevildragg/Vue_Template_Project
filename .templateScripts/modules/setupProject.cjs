@@ -4,7 +4,8 @@ const {
   templatesDir,
   projectRoot,
   IS_DEBUG,
-  updateRootPackageScripts
+  updateRootPackageScripts,
+  setupReleaseWorkflow
 } = require('../utils.cjs');
 
 async function setupProject() {
@@ -40,6 +41,9 @@ async function setupProject() {
       console.log('Copied standard CI GitHub Actions workflow.');
     }
   }
+
+  // Copy standard release workflow
+  await setupReleaseWorkflow();
 
   // Ensure root build script can handle workspaces, building workspaces FIRST
   updateRootPackageScripts({
