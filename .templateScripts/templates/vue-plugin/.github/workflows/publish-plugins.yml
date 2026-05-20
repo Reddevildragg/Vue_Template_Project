@@ -20,11 +20,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Build all workspaces
+        run: npm run build --workspaces --if-present
 
-      - name: Publish if not a pre-release
+      - name: Publish all public workspaces if not a pre-release
         if: "!contains(github.ref, '-dev')"
-        run: npm publish --access public
+        run: npm publish --workspaces --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

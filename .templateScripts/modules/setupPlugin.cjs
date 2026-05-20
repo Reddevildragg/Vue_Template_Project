@@ -23,7 +23,7 @@ function updateWorkspaces() {
         packageJson.workspaces = [];
       }
 
-      const pluginPattern = 'plugins/*';
+      const pluginPattern = 'plugins/**/*';
 
       if (!packageJson.workspaces.includes(pluginPattern)) {
         packageJson.workspaces.push(pluginPattern);
@@ -183,7 +183,7 @@ async function setupPlugin() {
       'Do you want to automatically add this plugin to main.ts using app.use()?',
       [
         { label: 'Yes', value: 'y' },
-        { label: 'No', value: 'n' },
+        { label: 'No', 'value': 'n' },
       ],
     );
     if (addToMain === 'y') {
