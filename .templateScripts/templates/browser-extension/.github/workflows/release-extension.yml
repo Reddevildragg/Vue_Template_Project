@@ -1,34 +1,25 @@
-name: Release Browser Extension
+name: Build and Release Browser Extension
 
 on:
   push:
     tags:
       - 'v*.*.*'
 
-permissions:
-  contents: write
-
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          ref: ${{ github.ref_name }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '22.x'
           cache: 'npm'
-
-      - name: Extract version from tag
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Update version in package.json
-        run: npm version ${{ steps.get_version.outputs.VERSION }} --no-git-tag-version
 
       - name: Install dependencies
         run: npm ci
@@ -36,13 +27,27 @@ jobs:
       - name: Build Extension
         run: npm run build
 
-      - name: Zip Extension
+      - name: Package Extension
         run: |
+          # The output directory is 'dist'. We will create a zip file from its contents.
           cd dist
-          zip -r ../extension.zip ./*
+          zip -r ../extension.zip .
 
-      - name: Create Release and Upload Zip
+      - name: Determine Release Type
+        id: release_type
+        run: |
+          if [[ "${{ github.ref_name }}" =~ -dev ]]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+            echo "latest=false" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+            echo "latest=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload Artifact to Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name }}
           files: extension.zip
-          generate_release_notes: true
+          prerelease: ${{ steps.release_type.outputs.prerelease }}
+          make_latest: ${{ steps.release_type.outputs.latest }}
