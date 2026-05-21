@@ -170,7 +170,7 @@ function updateRootPackageScripts(newScripts) {
   }
 }
 
-async function setupReleaseWorkflow() {
+async function setupReleaseWorkflow(pluginType) {
   const workflowDestDir = path.join(projectRoot, '.github', 'workflows');
   if (!fs.existsSync(workflowDestDir)) {
     if (!IS_DEBUG) fs.mkdirSync(workflowDestDir, { recursive: true });
@@ -191,11 +191,21 @@ async function setupReleaseWorkflow() {
       console.log('Skipping custom GitHub Repository configuration (leaving TODO).');
     }
 
+    // Replace the publish workflow placeholder if a pluginType is provided
+    if (pluginType) {
+      const targetWorkflowName = `publish-${pluginType}.yml`;
+      content = content.replace(
+        'uses: ./.github/workflows/publish-placeholder.yml',
+        `uses: ./.github/workflows/${targetWorkflowName}`
+      );
+      console.log(`Linked release workflow to ${targetWorkflowName}`);
+    }
+
     if (IS_DEBUG) {
       console.log(`[DEBUG] Would write release.yml to ${releaseWorkflowDest}`);
     } else {
       fs.writeFileSync(releaseWorkflowDest, content);
-      console.log('Copied release.yml GitHub Actions workflow.');
+      console.log('Copied and configured release.yml GitHub Actions workflow.');
     }
   }
 }

@@ -14,6 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     # Prevent this workflow from running on forks
     if: github.repository == 'your-repo-owner/your-repo-name' # TODO: Replace with your repo details
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,6 +34,19 @@ jobs:
         run: npm ci
 
       - name: Run semantic-release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v4
         env:
+          # Using the default GITHUB_TOKEN is fine here because we are explicitly calling the next job
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+
+  trigger-publish:
+    name: Trigger Publish
+    needs: release
+    if: needs.release.outputs.new_release_published == 'true'
+    # TODO: Your setup script should replace this path with the path to the chosen template's publish workflow.
+    uses: ./.github/workflows/publish-placeholder.yml
+    with:
+      version: ${{ needs.release.outputs.new_release_version }}
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

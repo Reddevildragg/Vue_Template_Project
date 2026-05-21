@@ -165,8 +165,8 @@ async function setupPlugin() {
     }
   }
 
-  // Copy standard release workflow
-  await setupReleaseWorkflow();
+  // Copy standard release workflow and pass the pluginType
+  await setupReleaseWorkflow(pluginType);
 
   console.log(`Plugin "${pluginName}" created at plugins/${pluginName}`);
 

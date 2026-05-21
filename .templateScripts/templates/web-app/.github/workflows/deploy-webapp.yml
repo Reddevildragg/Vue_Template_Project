@@ -1,9 +1,15 @@
 name: Deploy Web App
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  workflow_call:
+    inputs:
+      version:
+        description: 'The version being deployed'
+        required: true
+        type: string
+    secrets:
+      NPM_TOKEN:
+        required: false
 
 permissions:
   contents: read
@@ -23,6 +29,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: v${{ inputs.version }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -39,7 +47,7 @@ jobs:
       - name: Determine Deployment Environment
         id: deploy_env
         run: |
-          if [[ "${{ github.ref_name }}" =~ -dev ]]; then
+          if [[ "${{ inputs.version }}" =~ -dev ]]; then
             echo "env_name=staging" >> $GITHUB_OUTPUT
             echo "env_url=https://your-staging-url.com" >> $GITHUB_OUTPUT # TODO: Update with your staging URL
           else

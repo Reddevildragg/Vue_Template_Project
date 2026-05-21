@@ -1,9 +1,15 @@
 name: Build and Release Browser Extension
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  workflow_call:
+    inputs:
+      version:
+        description: 'The version being released'
+        required: true
+        type: string
+    secrets:
+      NPM_TOKEN:
+        required: false
 
 jobs:
   build-and-release:
@@ -13,7 +19,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref_name }}
+          ref: v${{ inputs.version }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -36,7 +42,7 @@ jobs:
       - name: Determine Release Type
         id: release_type
         run: |
-          if [[ "${{ github.ref_name }}" =~ -dev ]]; then
+          if [[ "${{ inputs.version }}" =~ -dev ]]; then
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "latest=false" >> $GITHUB_OUTPUT
           else
@@ -47,7 +53,7 @@ jobs:
       - name: Upload Artifact to Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: v${{ inputs.version }}
           files: extension.zip
           prerelease: ${{ steps.release_type.outputs.prerelease }}
           make_latest: ${{ steps.release_type.outputs.latest }}

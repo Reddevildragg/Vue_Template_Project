@@ -18,6 +18,13 @@
       }
     ],
     [
+      "@semantic-release/npm",
+      {
+        "pkgRoot": "plugins/{{plugin_name}}",
+        "npmPublish": false
+      }
+    ],
+    [
       "@semantic-release/git",
       {
         "assets": [
